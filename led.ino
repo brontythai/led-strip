@@ -7,7 +7,6 @@
 
 bool crawled = false; 
 bool cleaned = false; // To check if button is pressed while inside loop
-int buttonState = 0;
 int ledState = 0;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
@@ -40,35 +39,43 @@ void loop() {
       ledState = 0;
     }
     crawled = false; 
+
+    for(int j=0; j<NUMPIXELS; j++)
+    {
+      pixels.setPixelColor(j, pixels.Color(0,0,0)); // Set leds to nothing
+      pixels.show();
+    }
   }
   
-  // sucessful scenario
+  // Scenario 1 - Successful
   if (ledState == 0)
   {
-    // full crawl
+    // Full crawl
     if (crawled == false)
     {
-      cleaned = false; // Reset cleaned
-      
+      crawled = true;
       for(int i=0; i<NUMPIXELS; i++)
       {
-        // Check if button is pressed
+        //Check button status
         if (digitalRead(BUTTONPIN) == HIGH)
         {
-          cleanup(); // Wipe clear all leds
-          break; // Break out of loop
+          ledState = 1;
+          crawled = false;
+          for(int j=0; j<NUMPIXELS; j++)
+          {
+            pixels.setPixelColor(j, pixels.Color(0,0,0)); // Set leds to nothing
+            pixels.show();
+          }
+          break;
         }
         pixels.setPixelColor(i, pixels.Color(0,5,0)); // Set leds to green
         pixels.show(); // Light up leds
         delay(100); // Led on speed 
-        
       }
-      crawled = true;
     }
     
-  
-    // Light up all leds
-    else if (cleaned == false)
+    // Light up all green leds
+    else
     {
       for(int j=0; j<NUMPIXELS; j++)
       {
@@ -78,28 +85,41 @@ void loop() {
     }
   }
 
-  // ram failed scenario
+  // Scenario 2 - Ram failed
   if (ledState == 1)
   {
-    // half crawl
-    if(crawled == false)
+    // Half crawl
+    if (crawled == false)
     {
-      cleaned = false; // Reset cleaned
-
+      crawled = true;
       for(int i=0; i<(NUMPIXELS/2); i++)
-      {        
-        pixels.setPixelColor(i, pixels.Color(100,0,0)); // Set leds to red
+      {      
+        //Check button status
+        if (digitalRead(BUTTONPIN) == HIGH)
+        {
+          ledState = 0;
+          crawled = false;
+          for(int j=0; j<NUMPIXELS; j++)
+          {
+            pixels.setPixelColor(j, pixels.Color(0,0,0)); // Set leds to nothing
+            pixels.show();
+          }
+          break;
+        }
+
+        // Start crawling
+        pixels.setPixelColor(i, pixels.Color(0,5,0)); // Set leds to red
         pixels.show(); // Light up leds
         delay(100); // Led on speed 
       }
-      crawled = true;
     }
     
-    // Blinks
+    // Blink red leds
     else
-    {
+    {        
       for(int j=0; j<NUMPIXELS; j++)
-      {
+      { 
+        // Turns on blank leds
         pixels.setPixelColor(j, pixels.Color(0,0,0)); // Set leds to nothing
         pixels.show();
       }
@@ -107,35 +127,15 @@ void loop() {
       delay(1000);
       
       for(int k=0; k<NUMPIXELS; k++)
-      {
-        pixels.setPixelColor(k, pixels.Color(100,0,0)); // Set leds to red
+      {      
+        // Turn on red leds
+        pixels.setPixelColor(k, pixels.Color(5,0,0)); // Set leds to red
         pixels.show();
       }
     }
   }
 }
 
-
-void cleanup()
-{
-  for(int j=0; j<NUMPIXELS; j++)
-  {
-    pixels.setPixelColor(j, pixels.Color(0,0,10)); // Set leds to nothing
-    pixels.show();
-  }
-  cleaned = true; // Cleaned
-  crawled = false; 
-  
-  if (ledState == 0)
-  {
-    ledState++;
-  }
-  else
-  {
-    ledState = 0;
-  }
-
-}
 
 // Scenario1
 
@@ -147,5 +147,4 @@ void cleanup()
 //fail
 // -crawl half way (45 leds)
 // -blinks red
-
 
